@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CarsWebApplication.Database;
 using CarsWebApplication.Model;
+using EasyCaching.Core;
 
 namespace CarsWebApplication.Controllers
 {
@@ -15,31 +16,48 @@ namespace CarsWebApplication.Controllers
     public class CarsController : ControllerBase
     {
         private readonly CarContext _context;
+        private readonly IEasyCachingProviderFactory _easyCachingProviderFactory;
 
-        public CarsController(CarContext context)
+        public CarsController(CarContext context, IEasyCachingProviderFactory easyCachingProviderFactory)
         {
             _context = context;
+            _easyCachingProviderFactory = easyCachingProviderFactory;
         }
 
         // GET: api/Cars
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Car>>> GetCars()
-        {
-            return await _context.Cars.ToListAsync();
-        }
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Car>>> GetCars()
+        //{
+        //    return await _context.Cars.ToListAsync();
+        //}
 
         // GET: api/Cars/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Car>> GetCar(int id)
         {
-            var car = await _context.Cars.FindAsync(id);
+            var cache = _easyCachingProviderFactory.GetCachingProvider("default");
+
+            var car = await cache.GetAsync($"car{id}", async () => await _context.Cars.FindAsync(id), TimeSpan.FromSeconds(60));
+
+            //var car = await _context.Cars.FindAsync(id);
 
             if (car == null)
             {
                 return NotFound();
             }
 
-            return car;
+            return Ok(car);
+        }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Car>>> GetCarsPaging([FromQuery] CarPagingParameters carPagingParameters)
+        {
+            var cache = _easyCachingProviderFactory.GetCachingProvider("default");
+
+            var cars = await cache.GetAsync(carPagingParameters.PageIndex.ToString(), async () => await PaginatedList<Car>.CreateAsync(_context.Cars.AsNoTracking(), carPagingParameters.PageIndex, carPagingParameters.PageSize), TimeSpan.FromSeconds(60));
+
+            return Ok(cars);
+            
+          //  return await PaginatedList<Car>.CreateAsync(_context.Cars.AsNoTracking(), carPagingParameters.PageIndex, carPagingParameters.PageSize);
         }
 
         // PUT: api/Cars/5

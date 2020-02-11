@@ -29,6 +29,12 @@ namespace CarsWebApplication
             services.AddControllers();
 
             services.AddDbContext<CarContext>();
+
+            services.AddEasyCaching(options =>
+            {
+                options.UseInMemory("default");
+
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
