@@ -43,8 +43,6 @@ namespace CarsWebApplication.Controllers
         }
 
         // PUT: api/Cars/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCar(int id, Car car)
         {
@@ -75,8 +73,6 @@ namespace CarsWebApplication.Controllers
         }
 
         // POST: api/Cars
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPost]
         public async Task<ActionResult<Car>> PostCar(Car car)
         {
